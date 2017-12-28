@@ -18,7 +18,7 @@ const storage=multer.diskStorage({
 })
 
 
-//init upload
+//init upload dsafas
 const upload=multer({
     storage:storage
 }).array('uploads[]',12);
