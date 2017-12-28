@@ -44,7 +44,7 @@ route.post('/post/upload',verifyUser,(req,res,next)=>{
             }
             let newLinkArray=[];
             for(let i=0;i<req.files.length;i++){
-                newLinkArray.push('http://localhost:3000/uploads/'+req.files[i].filename);
+                newLinkArray.push(config.Host+'/uploads/'+req.files[i].filename);
             }
             let newPost=new Post({
                 hinhanh:newLinkArray
@@ -132,7 +132,7 @@ route.delete('/post/:postId',verifyUser,(req,res,next)=>{
                 if(err) return res.json({success:false, msg:err}) 
 
                 for(let i=0;i<post.hinhanh.length;i++){
-                    let filename=post.hinhanh[i].replace('http://localhost:3000/uploads/',"");
+                    let filename=post.hinhanh[i].replace(config.Host+'/uploads/',"");
                     fs.unlink('./src/uploads/'+filename, (err)=>{
                         if(err) throw err;
                     })
