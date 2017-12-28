@@ -128,15 +128,21 @@ route.delete('/post/:postId',verifyUser,(req,res,next)=>{
     jwt.verify(req.token,config.secret,(err,user)=>{
         if(err) { return res.json({success:false,msg:'Unauthorized!'})}
         if(user.chucvu=='admin'){
+            
             Post.findOneAndRemove({_id:req.params.postId},(err,post)=>{
                 if(err) return res.json({success:false, msg:err}) 
 
-                for(let i=0;i<post.hinhanh.length;i++){
-                    let filename=post.hinhanh[i].replace(config.Host+'/uploads/',"");
-                    fs.unlink('./src/uploads/'+filename, (err)=>{
-                        if(err) throw err;
-                    })
+                try{
+                    for(let i=0;i<post.hinhanh.length;i++){
+                        let filename=post.hinhanh[i].replace(config.Host+'/uploads/',"");
+                        fs.unlink('./src/uploads/'+filename, (err)=>{
+                            if(err) throw err;
+                        })
+                    }
+                }catch(err){
+                    throw err;
                 }
+                
                 res.json({success:true, msg:'delete successfully!'});
             })
         }else{
