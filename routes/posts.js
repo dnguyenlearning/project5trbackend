@@ -103,7 +103,8 @@ route.get('/post/:postId',(req,res)=>{
         res.json({success:true, post:post});
     })
 })
-
+ 
+//test
 
 route.put('/post/:postId',verifyUser,(req,res,next)=>{
     let postId=req.params.postId;
