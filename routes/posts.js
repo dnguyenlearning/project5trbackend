@@ -9,7 +9,7 @@ route.post('/upload')
 
 const storage=multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, './src/uploads/');
+        cb(null, './uploads/');
     },
     filename:(req,file,cb)=>{
         file.originalname=file.originalname.replace(' ','_');
@@ -37,24 +37,29 @@ route.get('/tatca/:chapnhan',(req,res)=>{
 route.post('/post/upload',verifyUser,(req,res,next)=>{
     jwt.verify(req.token,config.secret,(err,user)=>{
         if(err) { return res.json({success:false,msg:'Unauthorized!'})}
-        upload(req,res,function(err){
-            if(err){
-                 res.json({success:false,msg:err});
-                 return;
-            }
-            let newLinkArray=[];
-            for(let i=0;i<req.files.length;i++){
-                newLinkArray.push(config.Host+'/uploads/'+req.files[i].filename);
-            }
-            let newPost=new Post({
-                hinhanh:newLinkArray
-            })
-            newPost.save((err,post)=>{
-                if(err) return res.json({success:false, msg:err});
-                res.json({success:true, postId:post._id});
-            })
-           
-        });
+        try{
+            upload(req,res,function(err){
+                if(err){
+                     res.json({success:false,msg:err});
+                     return;
+                }
+                let newLinkArray=[];
+                for(let i=0;i<req.files.length;i++){
+                    newLinkArray.push(config.Host+'/uploads/'+req.files[i].filename);
+                }
+                let newPost=new Post({
+                    hinhanh:newLinkArray
+                })
+                newPost.save((err,post)=>{
+                    if(err) return res.json({success:false, msg:err});
+                    res.json({success:true, postId:post._id});
+                })
+               
+            });
+        }catch(err){
+            throw err;
+        }
+        
     });
     
 });
