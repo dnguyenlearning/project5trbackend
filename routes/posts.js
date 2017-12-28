@@ -9,7 +9,7 @@ route.post('/upload')
 
 const storage=multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null,  '/uploads/');
+        cb(null, __dirname.replace('routes','')+ 'src/uploads');
     },
     filename:(req,file,cb)=>{
         file.originalname=file.originalname.replace(' ','_');
