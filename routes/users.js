@@ -54,6 +54,7 @@ route.get('/user/:userId',(req,res)=>{
     let userId=req.params.userId;
     User.findOne({_id:userId},(err,user)=>{
         if(err)return res.json({success:false,msg:err});
+        if(!user) return res.json({success:false,msg:'Not Found'});
         res.json({success:true, username: user.ten})
     })
 })

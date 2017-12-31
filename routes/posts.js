@@ -5,7 +5,7 @@ const multer = require("multer");
 const Post=require('../modals/post');
 const path=require('path');
 const fs=require('fs');
-route.post('/upload')
+const cloudinary = require('cloudinary');
 
 const storage=multer.diskStorage({
     destination: function (req, file, cb) {
@@ -18,6 +18,12 @@ const storage=multer.diskStorage({
 })
 
 
+
+cloudinary.config({
+    cloud_name: 'amudisplay', 
+    api_key: config.cloundinary.api_key, 
+    api_secret: config.cloundinary.secret 
+})
 //init upload dsafas
 const upload=multer({
     storage:storage
@@ -35,25 +41,31 @@ route.get('/tatca/:chapnhan',(req,res)=>{
 
 // 
 route.post('/post/upload',verifyUser,(req,res,next)=>{
+    
     jwt.verify(req.token,config.secret,(err,user)=>{
         if(err) { return res.json({success:false,msg:'Unauthorized!'})}
         try{
+            
             upload(req,res,function(err){
-                if(err){
-                     res.json({success:false,msg:err});
-                     return;
+                if(err) return res.json({success:false,msg:err});
+                let fileNames=[];
+                let imagesClound=[];
+                let publicIdClound=[];
+                for(let [index,file] of req.files.entries()){
+                    let fileName=file.filename;
+                    fileNames.push(fileName);
+                    cloudinary.uploader.upload('./src/uploads/'+file.filename,(result,err)=>{
+                        if(err) return res.json({success:false,msg:err});
+                        publicIdClound.push(result.public_id)
+                        imagesClound.push(result.url);
+                        
+                        if(imagesClound.length==req.files.length){
+                            return res.json({success:true,imagesClound:imagesClound,uploadLink:fileNames, publicIdClound:publicIdClound});
+                        }
+                    })
                 }
-                let newLinkArray=[];
-                for(let i=0;i<req.files.length;i++){
-                    newLinkArray.push(config.Host+'/uploads/'+req.files[i].filename);
-                }
-                let newPost=new Post({
-                    hinhanh:newLinkArray
-                })
-                newPost.save((err,post)=>{
-                    if(err) return res.json({success:false, msg:err});
-                    res.json({success:true, postId:post._id});
-                })
+
+                
                
             });
         }catch(err){
@@ -77,15 +89,19 @@ route.get('/loaisanpham/:loaisanphamId',(req,res)=>{
 })
 
 //
-route.put('/post/update/:postId',verifyUser,(req,res,next)=>{
+route.post('/post/create',verifyUser,(req,res,next)=>{
     jwt.verify(req.token,config.secret,(err,user)=>{
         if(err) { return res.json({success:false,msg:'Unauthorized!'})}
-        let ngayhethan=new Date();
-        ngayhethan.setDate(ngayhethan.getDate()+ Number(req.body.ngayhethan));
-        Post.findOneAndUpdate({_id:req.params.postId},{$set:{
+        // let ngayhethan=new Date();
+        // ngayhethan.setDate(ngayhethan.getDate()+ Number(req.body.ngayhethan));
+
+        let newPost=new Post({
             ten:req.body.ten,
             nguoidang:req.body.nguoidang,
-            ngayhethan: ngayhethan,
+            filesName:req.body.filesName,
+            // ngayhethan: ngayhethan,
+            hinhanh:req.body.link,
+            publicId:req.body.publicIdClound,
             gia:req.body.gia,
             sdt:req.body.sdt,
             donvi:req.body.donvi,
@@ -93,9 +109,10 @@ route.put('/post/update/:postId',verifyUser,(req,res,next)=>{
             loaisanpham:req.body.loaisanpham,
             mota:req.body.mota,
             sdt:req.body.sdt
-        }},(err, updatedPost)=>{
+        })
+        newPost.save((err, newPost)=>{
             if(err) return res.json({success:false,msg:err});
-            res.json({success:true, msg:'updated Post!', newPost: updatedPost})
+            res.json({success:true, msg:'updated Post!', newPost: newPost})
         });
     });
 })
@@ -136,20 +153,29 @@ route.delete('/post/:postId',verifyUser,(req,res,next)=>{
         if(user.chucvu=='admin'){
             
             Post.findOneAndRemove({_id:req.params.postId},(err,post)=>{
-                if(err) return res.json({success:false, msg:err}) 
-
-                try{
-                    for(let i=0;i<post.hinhanh.length;i++){
-                        let filename=post.hinhanh[i].replace(config.Host+'/uploads/',"");
-                        fs.unlink(__dirname.replace('routes','')+'src/uploads/'+filename, (err)=>{
+                if(err) return res.json({success:false, msg:err})
+                if(!post)  return res.json({success:false, msg:'Not found'});
+                for(let i=0;i<post.filesName.length;i++){
+                    let filename=post.filesName[i];
+                    let path=__dirname.replace('routes','')+'src/uploads/'+filename;
+                    
+                    if(fs.existsSync(path)){
+                        fs.unlink(path, (err)=>{
                             if(err) throw err;
                         })
                     }
-                }catch(err){
-                    throw err;
+                }
+
+                for(let [index,public_id] of post.publicId.entries()){
+                    cloudinary.uploader.destroy(public_id,(err,result)=>{
+                        if(err.result!='ok') return res.json({success:false, msg:'Not found'});
+                        if(index==post.publicId.length-1){
+                            res.json({success:true,msg:'Deleted Post Successfully'});
+                        }
+                    })
+
                 }
                 
-                res.json({success:true, msg:'delete successfully!'});
             })
         }else{
             res.json({success:false,msg:'Unauthorized!'})
@@ -157,6 +183,16 @@ route.delete('/post/:postId',verifyUser,(req,res,next)=>{
     });
 })
 
+
+// route.post('/delete/post',(req,res)=>{
+    
+//     cloudinary.uploader.destroy('vvird1xo0lpugie6rf5d',(err,result)=>{
+//         console.log(err);
+//         console.log(result);
+//         res.send('done');
+//     })
+
+// })
 
 
 
