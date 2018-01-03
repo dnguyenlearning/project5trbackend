@@ -6,6 +6,7 @@ module.exports={
     },
     secret:'thisisafuckingshitsecret,canyougetthis?icant21412jfsalkfj124120i1okthankyou',
     cloundinary:{
+        cloud_name:'amudisplay',
         api_key:'125243964764514',
         secret:'Vyx3uNuBLRS3963O5rNudctC6Q0'
     }

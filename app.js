@@ -8,7 +8,7 @@ const app=express();
 const users=require('./routes/users');
 const loaisanpham=require('./routes/loaisanpham');
 const posts=require('./routes/posts');
-
+const tintuc=require('./routes/tintuc');
 
 mongoose.connect(config.database.path,(err)=>{
     console.log("connect to database");
@@ -32,6 +32,7 @@ app.use(bodyParser.json())
 app.use('/api/users', users);
 app.use('/api/loaisanpham', loaisanpham);
 app.use('/api/posts', posts);
+app.use('/api/tintuc', tintuc);
 
 app.get('/',(req,res)=>{
     res.send('invalid endpoint');

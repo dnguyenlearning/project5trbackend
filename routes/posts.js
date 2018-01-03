@@ -20,7 +20,7 @@ const storage=multer.diskStorage({
 
 
 cloudinary.config({
-    cloud_name: 'amudisplay', 
+    cloud_name: config.cloundinary.cloud_name, 
     api_key: config.cloundinary.api_key, 
     api_secret: config.cloundinary.secret 
 })
